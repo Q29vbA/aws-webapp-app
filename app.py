@@ -1,12 +1,12 @@
-from flask import Flask, jsonify
+from flask import Flask, render_template
 
 app = Flask(__name__)
 
 
 @app.get("/")
 def root():
-    """Return a simple health message."""
-    return jsonify(message="Hello from aws-webapp-app")
+    """Render the home page."""
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
