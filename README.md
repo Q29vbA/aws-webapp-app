@@ -14,3 +14,4 @@ To build and run locally:
 ```bash
 docker build -t aws-webapp-app:latest .
 docker run -p 8080:8080 aws-webapp-app:latest
+```
