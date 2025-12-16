@@ -1,5 +1,5 @@
 # aws-webapp-app
-Part of my aws onboarding project. ([aws-webapp-app](https://github.com/Q29vbA/aws-webapp-app/) (this repo), [aws-webapp-manifests](https://github.com/Q29vbA/aws-webapp-manifests/), [aws-webapp-infra](https://github.com/Q29vbA/aws-webapp-infra/))
+Part of my small aws base project. ([aws-webapp-app](https://github.com/Q29vbA/aws-webapp-app/) (this repo), [aws-webapp-manifests](https://github.com/Q29vbA/aws-webapp-manifests/), [aws-webapp-infra](https://github.com/Q29vbA/aws-webapp-infra/))
 
 This repo contains the python flask app code, dependencies, and the Dockerfile
 
