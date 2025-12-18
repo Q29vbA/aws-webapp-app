@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+env:
+  IMAGE_NAME: aws-webapp-app
+  REGISTRY: docker.io/${{ github.repository_owner }}
+  IMAGE_TAG: ${{ github.sha }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pylint
+
+      - name: Run pylint
+        run: |
+          pylint app.py
+
+  build-and-push:
+    needs: lint
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+
+  bump-manifests:
+    needs: build-and-push
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout manifests repo
+        uses: actions/checkout@v4
+        with:
+          repository: Q29vbA/aws-webapp-manifests
+          token: ${{ secrets.MANIFESTS_REPO_TOKEN }}
+          ref: main
+
+      - name: Update image tag
+        run: |
+          python - <<'PY'
+import pathlib, re, sys
+path = pathlib.Path("helm/values.yaml")
+text = path.read_text()
+new_tag = "${{ env.IMAGE_TAG }}"
+updated, count = re.subn(r'(^\\s*tag:\\s*).*$',
+                         rf'\\1{new_tag}',
+                         text,
+                         count=1,
+                         flags=re.MULTILINE)
+if count == 0:
+    sys.stderr.write("Did not find tag key to update in helm/values.yaml\\n")
+    sys.exit(1)
+path.write_text(updated)
+PY
+
+      - name: Create PR in manifests repo
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.MANIFESTS_REPO_TOKEN }}
+          commit-message: "chore: bump image tag to ${{ env.IMAGE_TAG }}"
+          title: "Bump image tag to ${{ env.IMAGE_TAG }}"
+          body: |
+            Automated bump from app CI after successful build and push.
+            New tag: `${{ env.IMAGE_TAG }}`.
+          branch: ci/bump-image-tag-${{ env.IMAGE_TAG }}
+          base: main
