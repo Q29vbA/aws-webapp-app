@@ -1,3 +1,8 @@
+"""
+super simple flask web app to get some friction with aws
+(+ k3s + argocd + terraform + github actions + aaaaaaaaa)
+"""
+
 from flask import Flask, render_template
 
 app = Flask(__name__)
