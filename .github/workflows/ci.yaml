@@ -14,7 +14,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: checkout
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt pylint
@@ -32,14 +32,14 @@ jobs:
           pylint app.py
 
   build-and-push:
-    needs: lint
+    needs: lint # only build if lint fully passed
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Compute image repo (lowercase owner)
+      - name: Compute image repo (lowercase owner) # dockerhub repo name same as my github username
         run: echo "IMAGE_REPO=${{ env.REGISTRY }}/${GITHUB_REPOSITORY_OWNER,,}/${{ env.IMAGE_NAME }}" >> "$GITHUB_ENV"
 
       - name: Set up Docker Buildx
@@ -71,10 +71,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: Q29vbA/aws-webapp-manifests
-          token: ${{ secrets.MANIFESTS_REPO_TOKEN }}
+          token: ${{ secrets.MANIFESTS_REPO_TOKEN }} # public repo, not sure token needed for checkout?
           ref: main
 
-      - name: Update image tag
+      - name: Update image tag # got only one image in values.yaml so simple replace is fine for this demo (probably yq for more complex)
         run: |
           python - <<'PY'
           import pathlib, re, sys
@@ -95,14 +95,14 @@ jobs:
           path.write_text(updated)
           PY
 
-      - name: Create PR in manifests repo
-        uses: peter-evans/create-pull-request@v6
+      - name: Create PR in manifests repo # gotta manually approve and merge
+        uses: peter-evans/create-pull-request@v6 # found this trusted prebuilt action
         with:
           token: ${{ secrets.MANIFESTS_REPO_TOKEN }}
-          commit-message: "chore: bump image tag to ${{ env.IMAGE_TAG }}"
+          commit-message: "bump image tag to ${{ env.IMAGE_TAG }}"
           title: "Bump image tag to ${{ env.IMAGE_TAG }}"
           body: |
-            Automated bump from app CI after successful build and push.
+            Automated bump from app ci workflow after successful build and push.
             New tag: `${{ env.IMAGE_TAG }}`.
           branch: ci/bump-image-tag-${{ env.IMAGE_TAG }}
           base: main
