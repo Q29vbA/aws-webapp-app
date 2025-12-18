@@ -77,23 +77,23 @@ jobs:
       - name: Update image tag
         run: |
           python - <<'PY'
-            import pathlib, re, sys
+import pathlib, re, sys
 
-            path = pathlib.Path("helm/values.yaml")
-            text = path.read_text()
-            new_tag = "${{ env.IMAGE_TAG }}"
-            updated, count = re.subn(
-                r'(^\s*tag:\s*).*$',
-                rf'\1{new_tag}',
-                text,
-                count=1,
-                flags=re.MULTILINE,
-            )
-            if count == 0:
-                sys.stderr.write("Did not find tag key to update in helm/values.yaml\n")
-                sys.exit(1)
-            path.write_text(updated)
-          PY
+path = pathlib.Path("helm/values.yaml")
+text = path.read_text()
+new_tag = "${{ env.IMAGE_TAG }}"
+updated, count = re.subn(
+    r'(^\s*tag:\s*).*$',
+    rf'\1{new_tag}',
+    text,
+    count=1,
+    flags=re.MULTILINE,
+)
+if count == 0:
+    sys.stderr.write("Did not find tag key to update in helm/values.yaml\n")
+    sys.exit(1)
+path.write_text(updated)
+PY
 
       - name: Create PR in manifests repo
         uses: peter-evans/create-pull-request@v6
