@@ -3,9 +3,9 @@ Part of my small aws base project. ([aws-webapp-app](https://github.com/Q29vbA/a
 
 This repo contains the python flask app code, dependencies, and the Dockerfile
 
-Using github actions pipeline, code goes through pylint, built and pushed to Amazon ECR
+Using github actions pipeline, code goes through pylint, built and pushed to dockerhub.
 
-Resulting image is referenced in the Helm chart located in the manifests repo and deployed to a k3s cluster managed by ArgoCD
+Resulting image tag is updated in the helm chart located in the manifests repo
 
 ## Usage
 
