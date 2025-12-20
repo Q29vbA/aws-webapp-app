@@ -21,5 +21,4 @@ docker run -p 8080:8080 aws-webapp-app:latest
 
 ## future tweaks
 - add a tiny test (pytest) so pylint isn’t the only gate
-- multi-arch image? not sure i need it
 - add a health endpoint instead of only “/”
